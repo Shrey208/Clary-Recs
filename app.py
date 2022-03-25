@@ -73,7 +73,7 @@ def recm(df, name, num):
     df2.columns = map(str.capitalize, df2.columns)
     return df2
 
-url = "https://clash-aqiry.herokuapp.com/"
+url = "https://share.streamlit.io/shrey208/clary-recs/app.py"
 df = pd.read_csv('anime.csv')
 df = df.dropna(how='any', axis=0)
 topdf = df.drop(['anime_id', 'type'], axis = 1)
