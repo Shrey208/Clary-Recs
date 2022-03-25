@@ -32,6 +32,10 @@ def check_user(username):
     c.execute("SELECT * FROM usertable WHERE username=?;",(username,))
     data = c.fetchall()
     return data
+def view_users():
+    c.execute("SELECT username FROM usertable")
+    data = c.fetchall()
+    return data
 def login_user(username, password):
     c.execute("SELECT * FROM usertable WHERE username=? AND password=?;",(username,password))
     data = c.fetchall()
@@ -109,7 +113,7 @@ elif choice=="Sign In":
         result = login_user(username,password)
         if result:
             st.success("Signed in as {}".format(username))
-            task = st.selectbox("Please Select a Task", ["Recommend From Anime Collection", "Add Anime to My Collection", "Recommend From Last Watched", "Surprise Me!! From my Collection", "View My Collection", "Remove Anime From My Collection"])
+            task = st.selectbox("Please Select a Task", ["Recommend From Anime Collection", "Add Anime to My Collection", "Recommend From Last Watched", "Surprise Me!! From my Collection", "View My Collection", "Remove Anime From My Collection", "View All Users"])
             if st.checkbox("Select Task"):
                 if task == "Recommend From Anime Collection":
                     option = st.selectbox('Select anime for recommendation', (df['name']))
@@ -173,6 +177,15 @@ elif choice=="Sign In":
                             st.checkbox("Check this box to Refresh Your Collection")
                     else:
                         st.warning("Your Collection is empty, our app is feeling unloved")
+                elif task == "View All Users":
+                    vu = view_users()
+                    if vu:
+                        vl = ""
+                        for i in vu:
+                            vl = vl + i[0] + "  \n"
+                        st.info(vl)
+                    else:
+                        st.warning("No Users Found, our app is feeling unloved")
         else:
             st.warning("Incorrect Username/Password")
 elif choice=="Sign Up":
