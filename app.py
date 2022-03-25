@@ -102,7 +102,7 @@ df = df.set_index('anime_id')
 df1 = df1.set_index('anime_id')
 
 st.title("Clary Recommends")
-menu=["Home","Sign In","Sign Up","Remove User"]
+menu=["Home","Sign In","Sign Up", "View All Users","Remove User"]
 choice=st.sidebar.selectbox("Menu",menu)
 if choice =="Home":
     image = Image.open('Images/TitleImage.jpg')
@@ -120,7 +120,7 @@ elif choice=="Sign In":
         result = login_user(username,password)
         if result:
             st.success("Signed in as {}".format(username))
-            task = st.selectbox("Please Select a Task", ["Recommend From Anime Collection", "Add Anime to My Collection", "Recommend From Last Watched", "Surprise Me!! From my Collection", "View My Collection", "Remove Anime From My Collection", "View All Users"])
+            task = st.selectbox("Please Select a Task", ["Recommend From Anime Collection", "Add Anime to My Collection", "Recommend From Last Watched", "Surprise Me!! From my Collection", "View My Collection", "Remove Anime From My Collection"])
             if st.checkbox("Select Task"):
                 if task == "Recommend From Anime Collection":
                     option = st.selectbox('Select anime for recommendation', (df['name']))
@@ -184,15 +184,6 @@ elif choice=="Sign In":
                             st.checkbox("Check this box to Refresh Your Collection")
                     else:
                         st.warning("Your Collection is empty, our app is feeling unloved")
-                elif task == "View All Users":
-                    vu = view_users()
-                    if vu:
-                        vl = ""
-                        for i in vu:
-                            vl = vl + i[0] + "  \n"
-                        st.info(vl)
-                    else:
-                        st.warning("No Users Found, our app is feeling unloved")
         else:
             st.warning("Incorrect Username/Password")
 elif choice=="Sign Up":
@@ -211,6 +202,18 @@ elif choice=="Sign Up":
             st.success("You have created an Otaku Account")
             if st.button('Go To Home'):
                 webbrowser.open(url)
+elif choice == "View All Users":
+    image = Image.open('Images/view.jpg')
+    st.image(image, use_column_width=True)
+    st.subheader("All Users")
+    vu = view_users()
+    if vu:
+        vl = ""
+        for i in vu:
+            vl = vl + i[0] + "  \n"
+        st.info(vl)
+    else:
+        st.warning("No Users Found, our app is feeling unloved")
 elif choice == "Remove User":
     image = Image.open('Images/Title.jpg')
     st.image(image, use_column_width=True)
