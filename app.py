@@ -102,7 +102,7 @@ df = df.set_index('anime_id')
 df1 = df1.set_index('anime_id')
 
 st.title("Clary Recommends")
-menu=["Home","Sign In","Sign Up", "View All Users","Remove User"]
+menu=["Home","Sign In","Sign Up", "View All Users","Remove User", "About"]
 choice=st.sidebar.selectbox("Menu",menu)
 if choice =="Home":
     image = Image.open('Images/TitleImage.jpg')
@@ -230,3 +230,9 @@ elif choice == "Remove User":
                 webbrowser.open(url)
         else :
             st.warning("Incorrect Username/Password")
+elif choice == "About" :
+    st.subheader("Made By")
+    st.success("Shreyansh Gupta")
+    st.info("Wasique Haidry")
+    if st.button('Source Repository'):
+        webbrowser.open_new_tab("https://github.com/Shrey208/Clary-Recs")
