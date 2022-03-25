@@ -9,7 +9,7 @@ from scipy.spatial import distance
 
 st.set_page_config(
      page_title="Clary Recs",
-     page_icon="favicon.ico",
+     page_icon="Images/favicon.ico",
      layout="wide",
      initial_sidebar_state="expanded",
  )
