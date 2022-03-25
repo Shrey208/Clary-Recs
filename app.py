@@ -234,5 +234,4 @@ elif choice == "About" :
     st.subheader("Made By")
     st.success("Shreyansh Gupta")
     st.info("Wasique Haidry")
-    if st.button('Source Repository'):
-        webbrowser.open_new_tab("https://github.com/Shrey208/Clary-Recs")
+    st.warning("Go To [Source Repository](https://github.com/Shrey208/Clary-Recs)")
