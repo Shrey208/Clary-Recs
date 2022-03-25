@@ -7,6 +7,13 @@ from PIL import Image
 import streamlit as st
 from scipy.spatial import distance
 
+st.set_page_config(
+     page_title="Clary Recs",
+     page_icon="favicon.ico",
+     layout="wide",
+     initial_sidebar_state="expanded",
+ )
+
 menu_style = """
         <style>
         #MainMenu {visibility: hidden;}
