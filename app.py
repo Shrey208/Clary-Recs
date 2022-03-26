@@ -84,7 +84,6 @@ def recm(df, name, num):
     df2.columns = map(str.capitalize, df2.columns)
     return df2
 
-url = "https://share.streamlit.io/shrey208/clary-recs/app.py#top-10-animes"
 df = pd.read_csv('anime.csv')
 df = df.dropna(how='any', axis=0)
 topdf = df.drop(['anime_id', 'type'], axis = 1)
@@ -200,8 +199,6 @@ elif choice=="Sign Up":
         else :
             add_user(new_user,new_password)
             st.success("You have created an Otaku Account")
-            if st.button('Go To Home'):
-                webbrowser.open(url)
 elif choice == "View All Users":
     image = Image.open('Images/view.jpg')
     st.image(image, use_column_width=True)
@@ -226,8 +223,6 @@ elif choice == "Remove User":
             drop_user(username,password)
             drop_anime(username)
             st.success("Rwemoved user {}".format(username))
-            if st.button('Go To Home'):
-                webbrowser.open(url)
         else :
             st.warning("Incorrect Username/Password")
 elif choice == "About" :
