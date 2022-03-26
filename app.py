@@ -1,7 +1,6 @@
 import joblib
 import random
 import sqlite3
-import webbrowser
 import pandas as pd
 from PIL import Image
 import streamlit as st
