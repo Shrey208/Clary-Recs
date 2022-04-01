@@ -1,6 +1,8 @@
+import shutil
 import joblib
 import random
 import sqlite3
+import requests
 import pandas as pd
 from PIL import Image
 import streamlit as st
@@ -25,12 +27,13 @@ st.markdown(menu_style, unsafe_allow_html=True)
 
 conn=sqlite3.connect("users.db")
 c=conn.cursor()
+@st.cache(allow_output_mutation=True, show_spinner=False)
 
-@st.cache(allow_output_mutation=True)
 
 def create_tables():
     c.execute("CREATE TABLE IF NOT EXISTS usertable(username TEXT, password TEXT);")
     c.execute("CREATE TABLE IF NOT EXISTS userdata(username TEXT, aname TEXT);")
+    c.execute("CREATE TABLE IF NOT EXISTS superuser(username TEXT, password TEXT);")
 def add_user(username, password):
     c.execute("INSERT INTO usertable(username,password) VALUES(?,?)",(username,password))
     conn.commit()
@@ -45,7 +48,7 @@ def view_users():
 def login_user(username, password):
     c.execute("SELECT * FROM usertable WHERE username=? AND password=?;",(username,password))
     data = c.fetchall()
-    return data        
+    return data 
 def drop_user(username, password):
     c.execute("DELETE FROM usertable WHERE username=? AND password=?;",(username,password))
     conn.commit()
@@ -66,7 +69,27 @@ def drop_anime(username):
 def remove_anime(ussername, aname) :
     c.execute("DELETE FROM userdata WHERE username =? and aname =?;",(username,aname))
     conn.commit()
-
+def login_su(username, password):
+    c.execute("SELECT * FROM superuser WHERE username=? AND password=?;",(username,password))
+    data = c.fetchall()
+    return data
+def su_drop(username):
+    c.execute("DELETE FROM usertable WHERE username=?;",(username,))
+    conn.commit()
+def aimg(aname):
+    query = "https://unofficial-anilist-parser.herokuapp.com/anime/" + aname
+    data = requests.get(query).json()
+    res = requests.get(data['cover'], stream = True)
+    if res.status_code == 200:
+        with open("pic.jpg",'wb') as f:
+            shutil.copyfileobj(res.raw, f)
+def mimg(aname):
+    query = "https://unofficial-anilist-parser.herokuapp.com/manga/" + aname
+    data = requests.get(query).json()
+    res = requests.get(data['cover'], stream = True)
+    if res.status_code == 200:
+        with open("pic.jpg",'wb') as f:
+            shutil.copyfileobj(res.raw, f)
 def recm(df, name, num):
     df2 = df.copy()
     uid = df[df['name']==name].index[0]
@@ -100,7 +123,7 @@ df = df.set_index('anime_id')
 df1 = df1.set_index('anime_id')
 
 st.title("Clary Recommends")
-menu=["Home","Sign In","Sign Up", "View All Users","Remove User", "About"]
+menu=["Home","Sign In","Sign Up", "Remove User","SuperUser Access", "About"]
 choice=st.sidebar.selectbox("Menu",menu)
 if choice =="Home":
     image = Image.open('Images/TitleImage.jpg')
@@ -111,79 +134,102 @@ elif choice=="Sign In":
     image = Image.open('Images/title.png')
     st.image(image, use_column_width=True)
     st.subheader("Sign In Section")
-    username=st.sidebar.text_input("User Name")
-    password=st.sidebar.text_input("Password",type="password")
-    if st.sidebar.checkbox("Sign In/Out"):
-        create_tables()
-        result = login_user(username,password)
-        if result:
-            st.success("Signed in as {}".format(username))
-            task = st.selectbox("Please Select a Task", ["Recommend From Anime Collection", "Add Anime to My Collection", "Recommend From Last Watched", "Surprise Me!! From my Collection", "View My Collection", "Remove Anime From My Collection"])
-            if st.checkbox("Select Task"):
-                if task == "Recommend From Anime Collection":
-                    option = st.selectbox('Select anime for recommendation', (df['name']))
-                    if st.button("Get Recommendation"):
-                        st.info("Hunting For Recommendations....")
-                        res = recm(df, option, 10)
-                        st.table(res.style.format({"Rating": "{:.2f}"}))
-                        st.success("Now Go watch from above animes!!!!")
-                elif task == "Add Anime to My Collection":
-                    option = st.selectbox('Select anime for adding', (df['name']))
-                    if st.button("Add Anime"):
-                        if check_anime(username, option):
-                            st.warning(option + " already in your Collection")
+    if view_users():
+        username=st.sidebar.text_input("User Name")
+        password=st.sidebar.text_input("Password",type="password")
+        if st.sidebar.checkbox("Sign In/Out"):
+            create_tables()
+            result = login_user(username,password)
+            if result:
+                st.success("Signed in as {}".format(username))
+                task = st.radio("Please Select a Task", ["Recommend From Anime Collection", "Add Anime to My Collection", "Recommend From Last Watched", "Surprise Me!! From my Collection", "View Otaku Collections", "Remove Anime From My Collection"])
+                if st.checkbox("Select Task"):
+                    if task == "Recommend From Anime Collection":
+                        option = st.selectbox('Select anime for recommendation', (df['name']))
+                        if st.button("Get Recommendation"):
+                            try:
+                                aimg(option)
+                                pic = Image.open('pic.jpg')
+                                st.image(pic)
+                            except:
+                                try:
+                                    mimg(option)    
+                                    pic = Image.open('pic.jpg')
+                                    st.image(pic)
+                                except:
+                                    pass                            
+                            finally:
+                                st.info("Finding Animes Like " + option)
+                            res = recm(df, option, 10)
+                            st.table(res.style.format({"Rating": "{:.2f}"}))
+                            st.success("Now Go watch from above animes!!!!")
+                    elif task == "Add Anime to My Collection":
+                        option = st.selectbox('Select anime for adding', (df['name']))
+                        if st.button("Add Anime"):
+                            if check_anime(username, option):
+                                st.warning(option + " already in your Collection")
+                            else:
+                                add_anime(username, option)
+                                st.success(option +" added to your Collection")
+                    elif task == "Recommend From Last Watched":
+                        hist = get_anime(username)
+                        if hist:
+                            lw = hist[len(hist)-1][0]
+                            st.success(lw + " was your last watched anime")
+                            st.info("Finding Animes Like " + lw)
+                            res = recm(df, lw, 10)
+                            st.table(res.style.format({"Rating": "{:.2f}"}))
+                            st.success("Now Go watch from above animes!!!!")
                         else:
-                            add_anime(username, option)
-                            st.success(option +" added to your Collection")
-                elif task == "Recommend From Last Watched":
-                    hist = get_anime(username)
-                    if hist:
-                        lw = hist[len(hist)-1][0]
-                        st.success(lw + " was your last watched anime")
-                        st.info("Hunting For Recommendations....")
-                        res = recm(df, lw, 10)
-                        st.table(res.style.format({"Rating": "{:.2f}"}))
-                        st.success("Now Go watch from above animes!!!!")
-                    else:
-                        st.warning("Your Collection is empty, our app is feeling unloved")
-                elif task == "Surprise Me!! From my Collection":
-                    hist = get_anime(username)
-                    if hist:
-                        la = []
-                        for i in hist:
-                            la.append(i[0])
-                        ran = random.choice(la)
-                        st.success(ran + " Selected")
-                        st.info("Hunting For Recommendations....")
-                        res = recm(df, ran, 10)
-                        st.table(res.style.format({"Rating": "{:.2f}"}))
-                        st.success("Now Go watch from above animes!!!!")
-                    else:
-                        st.warning("Your Collection is empty, our app is feeling unloved")
-                elif task == "View My Collection":
-                    hist = get_anime(username)
-                    if hist:
-                        nme= ""
-                        for i in hist:
-                            nme = nme + i[0] + "  \n"
-                        st.info(nme)
-                    else:
-                        st.warning("Your Collection is empty, our app is feeling unloved")
-                elif task == "Remove Anime From My Collection":
-                    hist = get_anime(username)
-                    if hist:
-                        ral = []
-                        for i in hist:
-                            ral.append(i[0])
-                        atm = st.selectbox('Select anime to remove', ral)
-                        if st.button("Remove Anime"):
-                            remove_anime(username, atm)
-                            st.success(atm +" removed from your Collection")
-                            st.checkbox("Check this box to Refresh Your Collection")
-                    else:
-                        st.warning("Your Collection is empty, our app is feeling unloved")
-        else:
-            st.warning("Incorrect Username/Password")
+                            st.warning("Your Collection is empty, our app is feeling unloved")
+                    elif task == "Surprise Me!! From my Collection":
+                        hist = get_anime(username)
+                        if hist:
+                            la = []
+                            for i in hist:
+                                la.append(i[0])
+                            ran = random.choice(la)
+                            st.success(ran + " Selected")
+                            st.info("Finding Animes Like " + ran)
+                            res = recm(df, ran, 10)
+                            st.table(res.style.format({"Rating": "{:.2f}"}))
+                            st.success("Now Go watch from above animes!!!!")
+                        else:
+                            st.warning("Your Collection is empty, our app is feeling unloved")
+                    elif task == "View Otaku Collections":
+                        vu = view_users()
+                        vl = []
+                        for i in vu:
+                            vl.append(i[0])
+                        rmu = st.selectbox('Select an Otaku', vl)
+                        if st.button("Select Otaku"):
+                            hist = get_anime(rmu)
+                            if hist:
+                                nme= ""
+                                for i in hist:
+                                    nme = nme + i[0] + "  \n"
+                                st.info(nme)
+                            elif username == rmu:
+                                st.warning("Your Collection is empty, our app is feeling unloved")
+                            else:
+                                st.warning(rmu +"'s Collection is empty, maybe they don't love our app")
+                    elif task == "Remove Anime From My Collection":
+                        hist = get_anime(username)
+                        if hist:
+                            ral = []
+                            for i in hist:
+                                ral.append(i[0])
+                            atm = st.selectbox('Select anime to remove', ral)
+                            if st.button("Remove Anime"):
+                                remove_anime(username, atm)
+                                st.success(atm +" removed from your Collection")
+                                st.checkbox("Check this box to Refresh Your Collection")
+                        else:
+                            st.warning("Your Collection is empty, our app is feeling unloved")
+            else:
+                st.warning("Incorrect Username/Password")
+    else:
+        st.warning("No Users Found, our app is feeling unloved")
 elif choice=="Sign Up":
     image = Image.open('Images/SignUp.jpg')
     st.image(image, use_column_width=True)
@@ -198,32 +244,48 @@ elif choice=="Sign Up":
         else :
             add_user(new_user,new_password)
             st.success("You have created an Otaku Account")
-elif choice == "View All Users":
+elif choice == "SuperUser Access":
     image = Image.open('Images/view.jpg')
     st.image(image, use_column_width=True)
-    st.subheader("All Users")
-    vu = view_users()
-    if vu:
-        vl = ""
-        for i in vu:
-            vl = vl + i[0] + "  \n"
-        st.info(vl)
-    else:
-        st.warning("No Users Found, our app is feeling unloved")
+    st.subheader("SuperUser Section")
+    username=st.sidebar.text_input("User Name")
+    password=st.sidebar.text_input("Password",type="password")
+    if st.sidebar.checkbox("Sign In/Out"):
+        result = login_su(username, password)
+        if result:
+            st.sidebar.success("SuperUser In")
+            vu = view_users()
+            if vu:
+                vl = []
+                for i in vu:
+                    vl.append(i[0])
+                rmu = st.selectbox('Select user to remove', vl)
+                if st.button("Remove User"):
+                    su_drop(rmu)
+                    drop_anime(rmu)
+                    st.info("SuperUser removed user " + rmu)
+                    st.checkbox("Check this box to Refresh the Database")
+            else:
+                st.warning("No Users Found, our app is feeling unloved")
+        else:
+            st.warning("Incorrect Username/Password")
 elif choice == "Remove User":
     image = Image.open('Images/Title.jpg')
     st.image(image, use_column_width=True)
     st.subheader("Remove User Section")
-    username=st.text_input("User Name")
-    password=st.text_input("Password",type="password")
-    result=login_user(username,password)
-    if st.button("Remove"):
-        if result:
-            drop_user(username,password)
-            drop_anime(username)
-            st.success("Rwemoved user {}".format(username))
-        else :
-            st.warning("Incorrect Username/Password")
+    if view_users():
+        username=st.text_input("User Name")
+        password=st.text_input("Password",type="password")
+        result=login_user(username,password)
+        if st.button("Remove"):
+            if result:
+                drop_user(username,password)
+                drop_anime(username)
+                st.success("Rwemoved user {}".format(username))
+            else :
+                st.warning("Incorrect Username/Password")
+    else:
+        st.warning("No Users Found, our app is feeling unloved")
 elif choice == "About" :
     st.subheader("Made By")
     st.success("Shreyansh Gupta")
