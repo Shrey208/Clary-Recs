@@ -83,6 +83,7 @@ def aimg(aname):
     if res.status_code == 200:
         with open("pic.jpg",'wb') as f:
             shutil.copyfileobj(res.raw, f)
+    return data['URL']
 def mimg(aname):
     query = "https://unofficial-anilist-parser.herokuapp.com/manga/" + aname
     data = requests.get(query).json()
@@ -90,6 +91,7 @@ def mimg(aname):
     if res.status_code == 200:
         with open("pic.jpg",'wb') as f:
             shutil.copyfileobj(res.raw, f)
+    return data['URL']
 def recm(df, name, num):
     df2 = df.copy()
     uid = df[df['name']==name].index[0]
@@ -148,18 +150,20 @@ elif choice=="Sign In":
                         option = st.selectbox('Select anime for recommendation', (df['name']))
                         if st.button("Get Recommendation"):
                             try:
-                                aimg(option)
+                                url = aimg(option)
                                 pic = Image.open('pic.jpg')
                                 st.image(pic)
+                                st.info("Details About " + option + " " + "[Here](%s)" % url)
                             except:
                                 try:
-                                    mimg(option)    
+                                    url = mimg(option)    
                                     pic = Image.open('pic.jpg')
                                     st.image(pic)
+                                    st.info("Details About " + option + " " + "[Here](%s)" % url)
                                 except:
-                                    pass                            
+                                    pass                       
                             finally:
-                                st.info("Finding Animes Like " + option)
+                                st.warning("Finding Animes Like " + option)
                             res = recm(df, option, 10)
                             st.table(res.style.format({"Rating": "{:.2f}"}))
                             st.success("Now Go watch from above animes!!!!")
