@@ -292,8 +292,7 @@ elif choice == "Remove User":
         st.warning("No Users Found, our app is feeling unloved")
 elif choice == "About" :
     st.subheader("About this App")
-    st.warning("A nice anime recomendation system to get your recommendations stored with your user profile. Simply SignUp and log in to the web-app then select your faviorate anime and get recommendations. If you love it a little too much then add it to ur profile as well. And it would be helpfull if you remove your profile afrer having fun with the app because our servers are not in Antarctica.")
+    st.warning("A nice anime recommendation system to get your recommendations stored with your user profile. Simply SignUp and SignIn to the web-app, then select your faviorate anime and click Get Recommendations. If you love the anime a little too much then you may add it to your Otaku collection as well.")
     st.subheader("Made By")
     st.success("Shreyansh Gupta")
     st.info("Wasique Haidry")
-    
