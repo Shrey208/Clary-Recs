@@ -291,7 +291,9 @@ elif choice == "Remove User":
     else:
         st.warning("No Users Found, our app is feeling unloved")
 elif choice == "About" :
+    st.subheader("About this App")
+    st.warning("A nice anime recomendation system to get your recommendations stored with your user profile. Simply SignUp and log in to the web-app then select your faviorate anime and get recommendations. If you love it a little too much then add it to ur profile as well. And it would be helpfull if you remove your profile afrer having fun with the app because our servers are not in Antarctica.")
     st.subheader("Made By")
     st.success("Shreyansh Gupta")
     st.info("Wasique Haidry")
-    st.warning("Go To [Source Repository](https://github.com/Shrey208/Clary-Recs)")
+    
