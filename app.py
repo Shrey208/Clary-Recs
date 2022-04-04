@@ -72,6 +72,10 @@ def login_su(username, password):
     c.execute("SELECT * FROM superuser WHERE username=? AND password=?;",(username,password))
     data = c.fetchall()
     return data
+def su_pass(username):
+    c.execute("SELECT password FROM usertable WHERE username=?;",(username,))
+    data = c.fetchall()
+    return data
 def su_drop(username):
     c.execute("DELETE FROM usertable WHERE username=?;",(username,))
     conn.commit()
@@ -103,7 +107,7 @@ def recm(df, name, num):
     df2.sort_values(by='distance' , inplace= True)
     df2.reset_index(drop=True, inplace=True)
     df2 = df2.drop(["anime_id", "type", "distance"], axis = 1)
-    df2.sort_values(by='rating' , inplace= True, ascending= False)
+    df2.sort_values(by='members' , inplace= True, ascending= False)
     df2.columns = map(str.capitalize, df2.columns)
     return df2
 
@@ -163,7 +167,7 @@ elif choice=="Sign In":
                                     pass                       
                             finally:
                                 st.warning("Finding Animes Like " + option)
-                            res = recm(df, option, 10)
+                            res = recm(df, option, 20)
                             st.table(res.style.format({"Rating": "{:.2f}"}))
                             st.success("Now Go watch from above animes!!!!")
                     elif task == "Add Anime to My Collection":
@@ -180,7 +184,7 @@ elif choice=="Sign In":
                             lw = hist[len(hist)-1][0]
                             st.success(lw + " was your last watched anime")
                             st.info("Finding Animes Like " + lw)
-                            res = recm(df, lw, 10)
+                            res = recm(df, lw, 20)
                             st.table(res.style.format({"Rating": "{:.2f}"}))
                             st.success("Now Go watch from above animes!!!!")
                         else:
@@ -194,7 +198,7 @@ elif choice=="Sign In":
                             ran = random.choice(la)
                             st.success(ran + " Selected")
                             st.info("Finding Animes Like " + ran)
-                            res = recm(df, ran, 10)
+                            res = recm(df, ran, 20)
                             st.table(res.style.format({"Rating": "{:.2f}"}))
                             st.success("Now Go watch from above animes!!!!")
                         else:
@@ -263,6 +267,8 @@ elif choice == "SuperUser Access":
                 for i in vu:
                     vl.append(i[0])
                 rmu = st.selectbox('Select user to remove', vl)
+                if st.checkbox("Reveal Password"):
+                    st.success("Password for "+ rmu + " : " + su_pass(rmu)[0][0])
                 if st.button("Remove User"):
                     su_drop(rmu)
                     drop_anime(rmu)
